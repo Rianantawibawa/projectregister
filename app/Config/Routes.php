@@ -7,14 +7,14 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 
- /////////////////////// LANDING /////////////////////////////////
- $routes->get('/', 'Landing::index');
- $routes->get('/index', 'Landing::index');
- $routes->get('/penjadwalan', 'Landing::penjadwalan');
- 
+/////////////////////// LANDING /////////////////////////////////
+$routes->get('/', 'Landing::index');
+$routes->get('/index', 'Landing::index');
+$routes->get('/penjadwalan', 'Landing::penjadwalan');
 
 
- ///////////////////// GURU PENGGANTI ////////////////////////////
+
+///////////////////// GURU PENGGANTI ////////////////////////////
 // $routes->get('/daftarguru', 'Landing::daftarguru');
 $routes->get('/gurupengganti', 'Landing::gurupengganti');
 $routes->get('/add_data_guru', 'Landing::add_data_guru');
@@ -25,7 +25,7 @@ $routes->get('/delete_guru/(:any)', 'Landing::delete_guru/$1');
 $routes->post('/proses_edit_guru', 'Landing::proses_edit_guru');
 $routes->get('/detail_gurupengganti/(:any)', 'Landing::detail_gurupengganti/$1');
 $routes->get('/dashboard_gurupengganti', 'Landing::dashboard_gurupengganti');
- 
+
 ////////////////////// MITRA SEKOLAH //////////////////////////////////
 $routes->get('/daftarmitrasekolah', 'Landing::daftarmitrasekolah');
 $routes->get('/mitrasekolah', 'Landing::mitrasekolah');
@@ -45,7 +45,7 @@ $routes->get('/download_foto/(:num)/(:any)', 'Landing::download_foto/$1/$2');
 
 
 
-                             ///////// ADMIN ////////// 
+///////// ADMIN //////////
 
 ///////////////////////////////// PENJADWALAN ADMIN ///////////////////////////
 $routes->get('admin/penjadwalan_guru', 'Admin::penjadwalan_guru');
@@ -76,9 +76,10 @@ $routes->get('admin/download_foto/(:num)/(:any)', 'Admin::download_foto/$1/$2');
 
 /////////////////////////////////// lOGIN ADMIN /////////////////////////////
 $routes->get('/login', 'Admin::login');
-$routes->get('/register', 'Landing::register');
+// $routes->get('/register', 'Landing::register');
+$routes->match(['GET', 'POST'], 'register', 'Landing::register');
 $routes->get('/', 'Admin::admin');
-$routes->group('admin', ['namespace' => 'App\Controllers', 'filter' => 'login'], function($routes) {
+$routes->group('admin', ['namespace' => 'App\Controllers', 'filter' => 'login'], function ($routes) {
     $routes->get('/', 'Admin::admin');
 });
 
@@ -89,7 +90,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers', 'filter' => 'login'],
 
 $routes->group('daftarguru', ['namespace' => 'App\Controllers', 'filter' => 'login_guru'], function ($routes) {
     $routes->get('/', 'Landing::daftarguru');
-   
+
 });
 
 
@@ -99,8 +100,3 @@ $routes->group('daftarguru', ['namespace' => 'App\Controllers', 'filter' => 'log
 $routes->group('mitra', ['filter' => 'auth:mitra'], function ($routes) {
     $routes->get('dashboard', 'MitraController::index');
 });
-
-
-
-
-
