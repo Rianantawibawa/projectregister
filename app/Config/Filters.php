@@ -27,7 +27,6 @@ class Filters extends BaseConfig
         'login'      => \Myth\Auth\Filters\LoginFilter::class,
         'role'       => \Myth\Auth\Filters\RoleFilter::class,
         'permission' => \Myth\Auth\Filters\PermissionFilter::class,
-        'session' => \App\Filters\SessionFilter::class,
         'login_guru' => \App\Filters\LoginGuruFilter::class,
     ];
 

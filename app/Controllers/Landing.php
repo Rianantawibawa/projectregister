@@ -1,79 +1,93 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Models\UserModel;
 
 class Landing extends BaseController
 {
     protected $helpers = ['auth'];
-    public  function login()
+    protected $validation;
+
+    public function __construct()
     {
-       
+        $this->validation = service('validation');
+    }
+
+    public function login()
+    {
+
         echo  view('login/login');
     }
-    
-    public  function register()
+
+    public function register()
     {
-        
-        $authorize = $auth = service('authorization');
-    
-       $data = [
-           'username' => $this->request->getVar('username'),
-           'email'    => $this->request->getVar('email'),
-           'password' => $this->request->getVar('password'),
-           'role'     => $this->request->getVar('role'),
-       ];
-    
-    $userModel = new \App\Models\UserModel();
-    
-    // Membuat pengguna baru dan menyimpan ID pengguna
-    $userId = $userModel->insert($data);
-    dd($userId);
-       
-    if ($userId) {
-        $role = $this->request->getVar('role');
-        
-        if ($role === 'guru') {
-            $authorize->addUserToGroup($userId, 'guru');
-        } elseif ($role === 'sekolah') {
-            $authorize->addUserToGroup($userId, 'sekolah');
+        if($this->request->is('get')) {
+            return view('login/register');
         }
+
+        $authorize = $auth = service('authorization');
+
+        $data = [
+            'username' => $this->request->getVar('username'),
+            'email'    => $this->request->getVar('email'),
+            'password' => $this->request->getVar('password'),
+            'pass_confirm' => $this->request->getVar('pass_confirm'),
+            // 'role'     => $this->request->getVar('role'),
+        ];
+
+        // dd($data);
+
+        $userModel = new \App\Models\UserModel();
+        $user = new \App\Entities\User($data);
+
+        // Membuat pengguna baru dan menyimpan ID pengguna
+        // $userId = $userModel->insert($data);
+        $val1 = $userModel->withGroup($this->request->getVar('role'))->save($user);
+
+        // $tmp = [
+        //     'val1' => $val1,
+        //     'val2' => $userModel->getInsertID(),
+        //     'val3' => $userModel->errors()
+        // ];
+
+        if(!$val1) {
+            return view('login/register');
+        }
+
+        return view('login/login');
     }
-    
 
-    echo  view('login/register', $data);
-   }
-
-    public  function index()
-    {   
+    public function index()
+    {
         if (session()->get('isLoggedIn')) {
             return redirect()->to(session()->get('redirectTo'));
         }
-        
+
         $data['username'] = user();
-    return  view('landing/index');
+        return  view('landing/index');
     }
 
-    public  function penjadwalan()
+    public function penjadwalan()
     {
- 
+
         $PenjadwalanModel = new \App\Models\PenjadwalanModel();
         $jadwal = $PenjadwalanModel ->findAll(); //mengambil smua data daftarguru menggunakan find all
-        $data['penjadwalan']=$jadwal;
+        $data['penjadwalan'] = $jadwal;
         $data['user'] = user();
-        return  view('landing/penjadwalan',$data);
+        return  view('landing/penjadwalan', $data);
     }
 
-    
 
-/////////////////////////// GURU PENGGANTI /////////////////////////////////////////////////////
-   public  function daftarguru()
-   {
+
+    /////////////////////////// GURU PENGGANTI /////////////////////////////////////////////////////
+    public function daftarguru()
+    {
         $authorize = $auth = service('authorization');
         return  view('landing/daftarguru');
-   }
-   
-    public  function gurupengganti()
+    }
+
+    public function gurupengganti()
     {
         return  view('landing/gurupengganti');
     }
@@ -82,7 +96,7 @@ class Landing extends BaseController
     {
         $DaftarguruModel = new \App\Models\DaftarguruModel();
         $daftarguru = $DaftarguruModel ->findAll(); //mengambil smua data daftarmitrasekolah menggunakan find all
-        $data['daftarguru']=$daftarguru;
+        $data['daftarguru'] = $daftarguru;
 
         return  view('landing/dashboard_gurupengganti', $data);
     }
@@ -103,23 +117,23 @@ class Landing extends BaseController
         $namacv = $fileCv->getname();
         $fileCv->move("img", $namacv);
 
-            $DaftarguruModel->insert(['namaguru' => $this->request->getPost('namaguru'),   
-                                'alamatguru' => $this->request->getPost('alamatguru'),
-                                'ttl' => $this->request->getPost('ttl'),
-                                'hp' => $this->request->getPost('hp'),
-                                'pendidikan' => $this->request->getPost('pendidikan'),
-                                'ijazah' => $namaijazah,
-                                'ktp' => $namaktp,
-                                'cv' => $namacv,
+        $DaftarguruModel->insert(['namaguru' => $this->request->getPost('namaguru'),
+                            'alamatguru' => $this->request->getPost('alamatguru'),
+                            'ttl' => $this->request->getPost('ttl'),
+                            'hp' => $this->request->getPost('hp'),
+                            'pendidikan' => $this->request->getPost('pendidikan'),
+                            'ijazah' => $namaijazah,
+                            'ktp' => $namaktp,
+                            'cv' => $namacv,
         ]);
         return redirect()->to(base_url('dashboard_gurupengganti'));
     }
 
     public function edit_data_guru($id = false)
     {
-        $DaftarguruModel = new \App\Models\DaftarguruModel(); 
+        $DaftarguruModel = new \App\Models\DaftarguruModel();
         $daftarguru = $DaftarguruModel ->find($id); //mengambil hanya satu data daftarguru berdasarkan id menggunakan find id
-        return view ('landing/edit_gurupengganti', ['daftarguru' => $daftarguru]); 
+        return view('landing/edit_gurupengganti', ['daftarguru' => $daftarguru]);
     }
 
     public function proses_edit_guru()
@@ -155,11 +169,11 @@ class Landing extends BaseController
         return redirect()->to(base_url('dashboard_gurupengganti'));
     }
 
-   public function detail_gurupengganti($id)
+    public function detail_gurupengganti($id)
     {
         $DaftarguruModel = new \App\Models\DaftarguruModel();
         $data['daftarguru'] = $DaftarguruModel->find($id);
-        return view ('landing/detail_gurupengganti', $data);
+        return view('landing/detail_gurupengganti', $data);
 
     }
 
@@ -167,24 +181,24 @@ class Landing extends BaseController
 
 
 
-///////////////////////////// MITRA SEKOLAH //////////////////////////////////////////////////////
-    public  function daftarmitrasekolah()
+    ///////////////////////////// MITRA SEKOLAH //////////////////////////////////////////////////////
+    public function daftarmitrasekolah()
     {
-         return  view('landing/daftarmitrasekolah');
+        return  view('landing/daftarmitrasekolah');
     }
-    
-   public  function mitrasekolah()
-   {
-        return  view('landing/mitrasekolah');
-   }
 
-   public  function dashboard_mitrasekolah()
-   {
+    public function mitrasekolah()
+    {
+        return  view('landing/mitrasekolah');
+    }
+
+    public function dashboard_mitrasekolah()
+    {
         $DaftarmitrasekolahModel = new \App\Models\DaftarmitrasekolahModel();
         $daftarmitrasekolah = $DaftarmitrasekolahModel ->findAll(); //mengambil smua data daftarmitrasekolah menggunakan find all
-        $data['daftarmitrasekolah']=$daftarmitrasekolah;
+        $data['daftarmitrasekolah'] = $daftarmitrasekolah;
         return  view('landing/dashboard_mitrasekolah', $data);
-   }
+    }
 
     public function proses_add_sekolah()
     {
@@ -195,7 +209,7 @@ class Landing extends BaseController
             return redirect()->to(base_url('dashboard_mitrasekolah'))->with('error', 'Invalid file: fotosekolah');
         }        $namafotosekolah = $fileFotosekolah->getname();
         $fileFotosekolah->move("img", $namafotosekolah);
-        $DaftarmitrasekolahModel->insert(['namasekolah' => $this->request->getPost('namasekolah'),   
+        $DaftarmitrasekolahModel->insert(['namasekolah' => $this->request->getPost('namasekolah'),
                                 'alamatsekolah' => $this->request->getPost('alamatsekolah'),
                                 'tglberdiri' => $this->request->getPost('tglberdiri'),
                                 'kepsek' => $this->request->getPost('kepsek'),
@@ -208,13 +222,14 @@ class Landing extends BaseController
     public function edit_mitrasekolah($id = false)
     {
         $DaftarmitrasekolahModel = new \App\Models\DaftarmitrasekolahModel();
-        $daftarmitrasekolah = $DaftarmitrasekolahModel ->find($id); 
-        return view ('landing/edit_mitrasekolah', ['daftarmitrasekolah' => $daftarmitrasekolah]); 
+        $daftarmitrasekolah = $DaftarmitrasekolahModel ->find($id);
+        return view('landing/edit_mitrasekolah', ['daftarmitrasekolah' => $daftarmitrasekolah]);
     }
 
     public function proses_edit_mitrasekolah()
     {
-        $DaftarmitrasekolahModel = new \App\Models\DaftarmitrasekolahModel();;
+        $DaftarmitrasekolahModel = new \App\Models\DaftarmitrasekolahModel();
+        ;
         $DaftarmitrasekolahModel->update($this->request->getPost('id_sekolah'), $this->request->getPost());
         return redirect()->to(base_url('dashboard_mitrasekolah'));
     }
@@ -231,15 +246,15 @@ class Landing extends BaseController
         }
 
         $DaftarmitrasekolahModel->delete($id);
-        return redirect ()->to(base_url('dashboard_mitrasekolah'));
+        return redirect()->to(base_url('dashboard_mitrasekolah'));
     }
 
     public function detail_mitrasekolah($id)
     {
-        $DaftarmitrasekolahModel = new \App\Models\DaftarmitrasekolahModel(); 
+        $DaftarmitrasekolahModel = new \App\Models\DaftarmitrasekolahModel();
         $data['mitrasekolah'] = $DaftarmitrasekolahModel->find($id);
-        return view ('landing/detail_mitrasekolah', $data);
+        return view('landing/detail_mitrasekolah', $data);
 
     }
-    
+
 }
